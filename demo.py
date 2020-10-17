@@ -10,7 +10,7 @@ import pandas as pd
 from create import capture
 
 window = tk.Tk()
-window.title("STudent Log-in System")
+window.title("Student Log-in System")
 
 window.configure(background='black')
 window.grid_rowconfigure(0, weight=1)
@@ -48,19 +48,20 @@ def Login():
         faces=faceCascade.detectMultiScale(gray, 1.2,5)    
         for(x,y,w,h) in faces:
             cv2.rectangle(im,(x,y),(x+w,y+h),(225,0,0),2)
-            Id, conf = recognizer.predict(gray[y:y+h,x:x+w])                                   
-            if(conf < 50):
-                aa=df.loc[df['Id'] == Id]['Name'].values
-                tt=str(Id)+"-"+aa
+            student_id, confidence= recognizer.predict(gray[y:y+h,x:x+w])                                   
+            if(confidence < 50):
+                valuecheck = df.loc[df['Id'] == student_id]['Name'].values
+                finalres = str(student_id) + "-" + valuecheck
                 
             else:
-                Id='Unknown'                
-                tt=str(Id) 
-                
-            if(conf > 75):
+                student_id = 'Unknown'                
+                finalres = str(student_id) 
+            
+            if(confidence > 85):
                 noOfFile=len(os.listdir("ImagesUnknown"))+1
                 cv2.imwrite("ImagesUnknown\Image"+str(noOfFile) + ".jpg", im[y:y+h,x:x+w])            
-            cv2.putText(im,str(tt),(x,y+h), cv2.FONT_HERSHEY_SIMPLEX, 1,(255,255,255),2)        
+            
+            cv2.putText(im, str(finalres), (x,y+h), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2)        
         
         cv2.imshow('Login',im) 
         if (cv2.waitKey(1)==ord('q')):
@@ -68,7 +69,6 @@ def Login():
         
     videocapture.release()
     cv2.destroyAllWindows()
-    #print(attendance)
    
 takeImg = tk.Button(window, text="Login", command=Login  ,fg="red"  ,bg="black"  ,width=20  ,height=3, activebackground = "Red" ,font=('times', 15, ' bold '))
 takeImg.place(x=200, y=500)
