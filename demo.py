@@ -1,114 +1,219 @@
 # -*- coding: utf-8 -*-
-# -*- coding: utf-8 -*-
 """
-Created on Wed Apr 22 15:30:59 2020
+Created on Fri Oct 16 19:14:48 2020
 
 @author: JANAKI
 """
-import cv2
-import dlib
+# -*- coding: utf-8 -*-
+"""
+Created on Sun Jun 17 2018
+@author: Ashish Kumar
+"""
+
+import tkinter as tk
+from tkinter import Message ,Text
+import cv2,os
+import shutil
+import csv
 import numpy as np
-import argparse
-from contextlib import contextmanager
-from model import model_choose
+from PIL import Image, ImageTk
+import pandas as pd
+import datetime
+import time
+import tkinter.ttk as ttk
+import tkinter.font as font
 
-def get_args():
-    parser = argparse.ArgumentParser(description="To detect faces from live webcam feed, pass them to the model, and display the face with the estimated age label.",
-                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument("--model_name", type=str, default="AlexNet",
-                        help="Enter the model's name you want to use.")
-    parser.add_argument("--depth", type=int, default=16,
-                        help="Enter the depth of WideResNet.")
-    parser.add_argument("--width", type=int, default=8,
-                        help="Enter the width of WideResNet")
-    parser.add_argument("--weight_file", type=str, default=None,
-                        help="enter the path to the weight file")
-    args = parser.parse_args()
-    return args
+window = tk.Tk()
+#helv36 = tk.Font(family='Helvetica', size=36, weight='bold')
+window.title("STudent Log-in System")
 
-# =============================================================================
-# def video():
-#     capture = yield_images()
-#     try:
-#         yield capture
-#     finally:
-#         capture.release()
-# =============================================================================
-        
-def yield_images():
-    # capture video
-    video_capture = cv2.VideoCapture(0)
-    video_capture.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-    video_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+dialog_title = 'QUIT'
+dialog_text = 'Are you sure?'
+#answer = messagebox.askquestion(dialog_title, dialog_text)
+ 
+#window.geometry('1280x720')
+window.configure(background='black')
 
+#window.attributes('-fullscreen', True)
+
+window.grid_rowconfigure(0, weight=1)
+window.grid_columnconfigure(0, weight=1)
+
+message = tk.Label(window, text="Student Log-in system" ,bg="black"  ,fg="white"  ,width=50  ,height=3,font=('times', 30, 'bold underline')) 
+
+message.place(x=200, y=20)
+
+lbl = tk.Label(window, text="Enter ID",width=20  ,height=2  ,fg="red"  ,bg="black" ,font=('times', 15, ' bold ') ) 
+lbl.place(x=400, y=200)
+
+txt = tk.Entry(window,width=20  ,bg="white" ,fg="red",font=('times', 15, ' bold '))
+txt.place(x=700, y=215)
+
+lbl2 = tk.Label(window, text="Enter Name",width=20  ,fg="red"  ,bg="black"    ,height=2 ,font=('times', 15, ' bold ')) 
+lbl2.place(x=400, y=300)
+
+txt2 = tk.Entry(window,width=20  ,bg="white"  ,fg="red",font=('times', 15, ' bold ')  )
+txt2.place(x=700, y=315)
+
+
+ 
+def clear():
+    txt.delete(0, 'end')    
+    res = ""
+    message.configure(text= res)
+
+def clear2():
+    txt2.delete(0, 'end')    
+    res = ""
+    message.configure(text= res)    
+    
+def is_number(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        pass
+ 
+    try:
+        import unicodedata
+        unicodedata.numeric(s)
+        return True
+    except (TypeError, ValueError):
+        pass
+ 
+    return False
+ 
+def TakeImages():        
+    Id=(txt.get())
+    name=(txt2.get())
+    if(is_number(Id) and name.isalpha()):
+        cam = cv2.VideoCapture(0)
+        harcascadePath = "haarcascade_frontalface_default.xml"
+        detector=cv2.CascadeClassifier(harcascadePath)
+        sampleNum=0
+        while(True):
+            ret, img = cam.read()
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            faces = detector.detectMultiScale(gray, 1.3, 5)
+            for (x,y,w,h) in faces:
+                cv2.rectangle(img,(x,y),(x+w,y+h),(255,0,0),2)        
+                #incrementing sample number 
+                sampleNum=sampleNum+1
+                #saving the captured face in the dataset folder TrainingImage
+                cv2.imwrite("TrainingImage\ "+name +"."+Id +'.'+ str(sampleNum) + ".jpg", gray[y:y+h,x:x+w])
+                #display the frame
+                cv2.imshow('Register',img)
+            #wait for 100 miliseconds 
+            if cv2.waitKey(100) & 0xFF == ord('q'):
+                break
+            # break if the sample number is morethan 100
+            elif sampleNum>60:
+                break
+        cam.release()
+        cv2.destroyAllWindows() 
+        res = "Images Saved for ID : " + Id +" Name : "+ name
+        row = [Id , name]
+        with open('StudentDetails\StudentDetails.csv','a+') as csvFile:
+            writer = csv.writer(csvFile)
+            writer.writerow(row)
+        csvFile.close()
+        TrainImages()
+        message.configure(text= res)
+    else:
+        if(is_number(Id)):
+            res = "Enter Alphabetical Name"
+            message.configure(text= res)
+        if(name.isalpha()):
+            res = "Enter Numeric Id"
+            message.configure(text= res)
+    
+def TrainImages():
+    recognizer = cv2.face_LBPHFaceRecognizer.create()#recognizer = cv2.face.LBPHFaceRecognizer_create()#$cv2.createLBPHFaceRecognizer()
+    harcascadePath = "haarcascade_frontalface_default.xml"
+    detector =cv2.CascadeClassifier(harcascadePath)
+    faces,Id = getImagesAndLabels("TrainingImage")
+    recognizer.train(faces, np.array(Id))
+    recognizer.save("TrainingImageLabel\Trainner.yml")
+    res = "Image Trained"#+",".join(str(f) for f in Id)
+    message.configure(text= res)
+
+def getImagesAndLabels(path):
+    #get the path of all the files in the folder
+    imagePaths=[os.path.join(path,f) for f in os.listdir(path)] 
+    #print(imagePaths)
+    
+    #create empth face list
+    faces=[]
+    #create empty ID list
+    Ids=[]
+    #now looping through all the image paths and loading the Ids and the images
+    for imagePath in imagePaths:
+        #loading the image and converting it to gray scale
+        pilImage=Image.open(imagePath).convert('L')
+        #Now we are converting the PIL image into numpy array
+        imageNp=np.array(pilImage,'uint8')
+        #getting the Id from the image
+        Id=int(os.path.split(imagePath)[-1].split(".")[1])
+        # extract the face from the training image sample
+        faces.append(imageNp)
+        Ids.append(Id)        
+    return faces,Ids
+
+def TrackImages():
+    recognizer = cv2.face.LBPHFaceRecognizer_create()#cv2.createLBPHFaceRecognizer()
+    recognizer.read("TrainingImageLabel\Trainner.yml")
+    harcascadePath = "haarcascade_frontalface_default.xml"
+    faceCascade = cv2.CascadeClassifier(harcascadePath);    
+    df=pd.read_csv("StudentDetails\StudentDetails.csv")
+    cam = cv2.VideoCapture(0)
+    font = cv2.FONT_HERSHEY_SIMPLEX        
+    col_names =  ['Id','Name','Date','Time']
+    attendance = pd.DataFrame(columns = col_names)    
     while True:
-        ret, img = video_capture.read()
-        yield img
-
-def draw_label(image, point, label, font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=1, thickness=2):
-    size = cv2.getTextSize(label, font, font_scale, thickness)[0]
-    x, y = point
-    cv2.rectangle(image, (x, y - size[1]), (x + size[0], y), (255, 0, 0), cv2.FILLED)
-    cv2.putText(image, label, point, font, font_scale, (255, 255, 255), thickness)
-
-def main():
-    args = get_args()
-    model_name = args.model_name
-    weight_file = args.weight_file
-    depth = args.depth
-    width = args.width
-
-    if not weight_file:
-        weight_file = 'alexnet.hdf5'
-        
-    # for face detection
-    detector = dlib.get_frontal_face_detector()
-
-    # load model and weights
-    model = model_choose(depth, width, model_name=model_name)
-    #model = buildmodel(64, 16, 8)
-    model.load_weights(weight_file)
-    img_size = model.input.shape.as_list()[1]
-
-    image_generator = yield_images()
-    margin = 0.8
-    for img in image_generator:
-        input_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        img_h, img_w, _ = np.shape(input_img)
-
-        # detect faces using dlib detector
-        detected = detector(input_img, 1)
-        faces = np.empty((len(detected), img_size, img_size, 3))
-
-        if len(detected) > 0:
-            for i, d in enumerate(detected):
-                x1, y1, x2, y2, w, h = d.left(), d.top(), d.right() + 1, d.bottom() + 1, d.width(), d.height()
-                xw1 = max(int(x1 - margin * w), 0)
-                yw1 = max(int(y1 - margin * h), 0)
-                xw2 = min(int(x2 + margin * w), img_w - 1)
-                yw2 = min(int(y2 + margin * h), img_h - 1)
-                cv2.rectangle(img, (x1, y1), (x2, y2), (255, 0, 0), 2)
-                faces[i, :, :, :] = cv2.resize(img[yw1:yw2 + 1, xw1:xw2 + 1, :], (img_size, img_size))
-
-            # predict ages and genders of the detected faces
-            results = model.predict(faces)
-            ages = np.arange(0, 101).reshape(101, 1)
-            if (model_name == "WideResNet"):
-                predicted_ages = results[1].dot(ages).flatten()
+        ret, im =cam.read()
+        gray=cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
+        faces=faceCascade.detectMultiScale(gray, 1.2,5)    
+        for(x,y,w,h) in faces:
+            cv2.rectangle(im,(x,y),(x+w,y+h),(225,0,0),2)
+            Id, conf = recognizer.predict(gray[y:y+h,x:x+w])                                   
+            if(conf < 50):
+                ts = time.time()      
+                date = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d')
+                timeStamp = datetime.datetime.fromtimestamp(ts).strftime('%H:%M:%S')
+                aa=df.loc[df['Id'] == Id]['Name'].values
+                tt=str(Id)+"-"+aa
+                attendance.loc[len(attendance)] = [Id,aa,date,timeStamp]
+                
             else:
-                predicted_ages = results.dot(ages).flatten()
-
-            # draw results
-            for i, d in enumerate(detected):
-                label = str(int(predicted_ages[i]))
-                draw_label(img, (d.left(), d.top()), label)
-
-        cv2.imshow("Real time Age Estimation", img)
-        key = cv2.waitKey(30)
-
-        if key == 27:
+                Id='Unknown'                
+                tt=str(Id) 
+                
+            if(conf > 75):
+                noOfFile=len(os.listdir("ImagesUnknown"))+1
+                cv2.imwrite("ImagesUnknown\Image"+str(noOfFile) + ".jpg", im[y:y+h,x:x+w])            
+            cv2.putText(im,str(tt),(x,y+h), font, 1,(255,255,255),2)        
+        attendance=attendance.drop_duplicates(subset=['Id'],keep='first')    
+        cv2.imshow('Login',im) 
+        if (cv2.waitKey(1)==ord('q')):
             break
+    ts = time.time()      
+    date = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d')
+    timeStamp = datetime.datetime.fromtimestamp(ts).strftime('%H:%M:%S')
+    Hour,Minute,Second=timeStamp.split(":")
+    fileName="Attendance\Attendance_"+date+"_"+Hour+"-"+Minute+"-"+Second+".csv"
+    attendance.to_csv(fileName,index=False)
+    cam.release()
+    cv2.destroyAllWindows()
+    #print(attendance)
+   
+takeImg = tk.Button(window, text="Login", command=TrackImages  ,fg="red"  ,bg="black"  ,width=20  ,height=3, activebackground = "Red" ,font=('times', 15, ' bold '))
+takeImg.place(x=200, y=500)
+trainImg = tk.Button(window, text="Register", command=TakeImages  ,fg="red"  ,bg="black"  ,width=20  ,height=3, activebackground = "Red" ,font=('times', 15, ' bold '))
+trainImg.place(x=500, y=500)
+trackImg = tk.Button(window, text="Age Detection", command=TrackImages  ,fg="blue"  ,bg="black"  ,width=20  ,height=3, activebackground = "Red" ,font=('times', 15, ' bold '))
+trackImg.place(x=800, y=500)
+quitWindow = tk.Button(window, text="Quit", command=window.destroy  ,fg="red"  ,bg="black"  ,width=20  ,height=3, activebackground = "Red" ,font=('times', 15, ' bold '))
+quitWindow.place(x=1100, y=500)
 
-
-if __name__ == '__main__':
-    main()
+ 
+window.mainloop()
