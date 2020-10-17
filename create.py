@@ -13,11 +13,10 @@ def train():
     
     for imagePath in imagePaths:
         face_image=Image.open(imagePath).convert('L')
-        #Now we are converting the PIL image into numpy array
         image_array=np.array(face_image,'uint8')
-        #getting the Id from the image
+        
         Id=int(os.path.split(imagePath)[-1].split(".")[1])
-        # extract the face from the training image sample
+        
         faces.append(image_array)
         Ids.append(Id)
     recognizer.train(faces, np.array(Id))

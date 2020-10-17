@@ -46,9 +46,11 @@ def Login():
         ret, im = videocapture.read()
         gray=cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
         faces=faceCascade.detectMultiScale(gray, 1.2,5)    
+        
         for(x,y,w,h) in faces:
             cv2.rectangle(im,(x,y),(x+w,y+h),(225,0,0),2)
             student_id, confidence= recognizer.predict(gray[y:y+h,x:x+w])                                   
+            
             if(confidence < 50):
                 valuecheck = df.loc[df['Id'] == student_id]['Name'].values
                 finalres = str(student_id) + "-" + valuecheck
@@ -56,10 +58,6 @@ def Login():
             else:
                 student_id = 'Unknown'                
                 finalres = str(student_id) 
-            
-            if(confidence > 85):
-                noOfFile=len(os.listdir("ImagesUnknown"))+1
-                cv2.imwrite("ImagesUnknown\Image"+str(noOfFile) + ".jpg", im[y:y+h,x:x+w])            
             
             cv2.putText(im, str(finalres), (x,y+h), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2)        
         
@@ -70,12 +68,15 @@ def Login():
     videocapture.release()
     cv2.destroyAllWindows()
    
-takeImg = tk.Button(window, text="Login", command=Login  ,fg="red"  ,bg="black"  ,width=20  ,height=3, activebackground = "Red" ,font=('times', 15, ' bold '))
-takeImg.place(x=200, y=500)
-trainImg = tk.Button(window, text="Register", command=captureimage  ,fg="red"  ,bg="black"  ,width=20  ,height=3, activebackground = "Red" ,font=('times', 15, ' bold '))
-trainImg.place(x=500, y=500)
-trackImg = tk.Button(window, text="Age Detection", command=Login  ,fg="blue"  ,bg="black"  ,width=20  ,height=3, activebackground = "Red" ,font=('times', 15, ' bold '))
-trackImg.place(x=800, y=500)
+login = tk.Button(window, text="Login", command=Login  ,fg="red"  ,bg="black"  ,width=20  ,height=3, activebackground = "Red" ,font=('times', 15, ' bold '))
+login.place(x=200, y=500)
+
+reg = tk.Button(window, text="Register", command=captureimage  ,fg="red"  ,bg="black"  ,width=20  ,height=3, activebackground = "Red" ,font=('times', 15, ' bold '))
+reg.place(x=500, y=500)
+
+agedetect = tk.Button(window, text="Age Detection", command=Login  ,fg="blue"  ,bg="black"  ,width=20  ,height=3, activebackground = "Red" ,font=('times', 15, ' bold '))
+agedetect.place(x=800, y=500)
+
 quitWindow = tk.Button(window, text="Quit", command=window.destroy  ,fg="red"  ,bg="black"  ,width=20  ,height=3, activebackground = "Red" ,font=('times', 15, ' bold '))
 quitWindow.place(x=1100, y=500)
 
