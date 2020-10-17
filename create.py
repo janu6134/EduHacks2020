@@ -12,16 +12,16 @@ def train():
     Ids=[]
     
     for imagePath in imagePaths:
-        pilImage=Image.open(imagePath).convert('L')
+        face_image=Image.open(imagePath).convert('L')
         #Now we are converting the PIL image into numpy array
-        imageNp=np.array(pilImage,'uint8')
+        image_array=np.array(face_image,'uint8')
         #getting the Id from the image
         Id=int(os.path.split(imagePath)[-1].split(".")[1])
         # extract the face from the training image sample
-        faces.append(imageNp)
+        faces.append(image_array)
         Ids.append(Id)
     recognizer.train(faces, np.array(Id))
-    recognizer.save("TrainedModel\Trainner.yml")
+    recognizer.save("TrainedModel\Model.yml")
 
 def capture(studenttext, nametext):        
     Id=(studenttext.get())

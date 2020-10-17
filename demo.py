@@ -35,7 +35,7 @@ def captureimage():
     
 def Login():
     recognizer = cv2.face.LBPHFaceRecognizer_create()
-    recognizer.read("TrainiedModel\Trainner.yml")
+    recognizer.read("TrainedModel\Model.yml")
 
     faceCascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml");    
     
