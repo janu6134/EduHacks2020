@@ -1,13 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Created on Fri Oct 16 19:14:48 2020
-
 @author: JANAKI
-"""
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Jun 17 2018
-@author: Ashish Kumar
 """
 
 import tkinter as tk
