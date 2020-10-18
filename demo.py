@@ -53,9 +53,8 @@ def Login():
             if(confidence < 50):
                 finalres = str(student_id) + "-" + df.loc[df['Id'] == student_id]['Name'].values
                 
-            else:
-                student_id = 'Unknown'                
-                finalres = str(student_id) 
+            else:                
+                finalres = str('Unknown Face') 
             
             cv2.putText(im, str(finalres), (x,y+h), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,0), 2)        
         
