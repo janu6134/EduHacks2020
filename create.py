@@ -1,7 +1,7 @@
+from PIL import Image
 import cv2,os
 import csv
 import numpy as np
-from PIL import Image
 
 def train():
     recognizer = cv2.face_LBPHFaceRecognizer.create()
